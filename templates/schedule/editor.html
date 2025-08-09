@@ -252,27 +252,55 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="{% static 'js/schedule.js' %}"></script>
-<script>
-    function adjustHeight(scheduleBlocks){
 
-        const ruler = document.querySelector("#schedule-canvas > table > tbody > tr");
-        console.log("Ruler height:", ruler ? ruler.offsetHeight : "Not found");
-        scheduleBlocks.forEach(block => {
-            const start = Number(block.dataset.startPeriod);
-            const end = Number(block.dataset.endPeriod);
-            const rulerHeight = ruler ? ruler.offsetHeight : 40;
-            block.style.height = ((end - start + 1) * rulerHeight) + 'px';
-            console.log(`Block ${block.dataset.scheduleId} height set to ${block.style.height}`);
-        });
+<style>
+/* Zoom feedback animation */
+@keyframes zoomFadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px) scale(0.8);
     }
-    document.addEventListener('DOMContentLoaded', function() {
-        const scheduleBlocks = document.querySelectorAll('.schedule-block');
-        adjustHeight(scheduleBlocks);
-        window.addEventListener('resize', function() {
-            adjustHeight(scheduleBlocks);
-        });
-    });
-    
-</script>
+    20% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+    80% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px) scale(0.8);
+    }
+}
+
+/* Smooth zoom transitions */
+#schedule-canvas {
+    transition: transform 0.3s ease;
+}
+
+/* Zoom controls styling enhancements */
+.zoom-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.zoom-level {
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.zoom-level:hover {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+/* Canvas container adjustments for zoom */
+.canvas-content {
+    position: relative;
+    min-height: 400px;
+}
+</style>
 {% endblock %}
 
