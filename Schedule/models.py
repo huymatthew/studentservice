@@ -6,6 +6,7 @@ class Schedule(models.Model):
     title = models.CharField(max_length=100)
     scheduleID = models.CharField(max_length=32, unique=True)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='owner')
+    public = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.title

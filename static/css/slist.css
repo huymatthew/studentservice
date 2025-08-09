@@ -332,20 +332,16 @@
     letter-spacing: 0.5px;
 }
 
-.status-active {
-    background: rgba(40, 167, 69, 0.1);
-    color: #28a745;
+.status-public {
+    background: rgba(40, 167, 69, 0.15);
+    color: #218838;
 }
 
-.status-draft {
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
+.status-private {
+    background: rgba(52, 58, 64, 0.12);
+    color: #343a40;
 }
 
-.status-archived {
-    background: rgba(108, 117, 125, 0.1);
-    color: #6c757d;
-}
 
 @media (max-width: 768px) {
     .actions-bar {

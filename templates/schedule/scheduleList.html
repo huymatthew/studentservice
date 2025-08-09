@@ -80,9 +80,6 @@
                     </div>
                 </div>
                 <div class="schedule-actions">
-                    <button class="btn-action btn-edit" onclick="editSchedule('{{ schedule.scheduleID }}')" title="Chỉnh sửa">
-                        <i class="fas fa-edit"></i>
-                    </button>
                     <button class="btn-action btn-export" onclick="exportSchedule('{{ schedule.scheduleID }}')" title="Xuất">
                         <i class="fas fa-download"></i>
                     </button>
@@ -110,10 +107,6 @@
                 <span>
                     <i class="fas fa-book"></i> 
                     {{ schedule.subjects_count|default:0 }} môn học
-                </span>
-                <span>
-                    <i class="fas fa-users"></i> 
-                    Học kỳ {{ schedule.semester|default:"1" }}
                 </span>
             </div>
         </div>

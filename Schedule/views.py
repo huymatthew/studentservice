@@ -11,25 +11,14 @@ def schedule_list(request):
     """Display list of all schedules"""
     schedules = Schedule.objects.all().order_by('-updated_at')
     
-    # Calculate statistics
-    total_schedules = schedules.count()
-    active_schedules = total_schedules  # Since we don't have status field, assume all active
-    
-    # Get total subjects across all schedules
-    total_subjects = Subject.objects.count()
-    
     # Add subjects count for each schedule
     for schedule in schedules:
         schedule.subjects_count = Subject.objects.filter(schedule=schedule).count()
         schedule.created_at = schedule.updated_at  # Use updated_at as created_at
-        schedule.status = 'active'  # Default status since we don't have this field
-        schedule.semester = "1"  # Default semester
+        schedule.status = 'public' if schedule.public else 'private'
     
     context = {
         'schedules': schedules,
-        'total_schedules': total_schedules,
-        'active_schedules': active_schedules,
-        'total_subjects': total_subjects,
     }
     return render(request, 'schedule/scheduleList.html', context)
 
