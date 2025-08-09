@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý Thời khóa biểu - DUT Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/schedule.css' %}">
+<link rel="stylesheet" href="{% static 'css/slist.css' %}">
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="schedule-list-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1><i class="fas fa-calendar-alt"></i> Quản lý Thời khóa biểu</h1>
+        <p class="subtitle">Tạo, chỉnh sửa và quản lý thời khóa biểu của bạn</p>
+    </div>
+
+    <!-- Statistics Cards 
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="number">{{ total_schedules|default:0 }}</div>
+            <div class="label">Tổng thời khóa biểu</div>
+        </div>
+        <div class="stat-card active">
+            <div class="icon">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="number">{{ active_schedules|default:0 }}</div>
+            <div class="label">Đang sử dụng</div>
+        </div>
+        <div class="stat-card subjects">
+            <div class="icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="number">{{ total_subjects|default:0 }}</div>
+            <div class="label">Tổng môn học</div>
+        </div>
+    </div>-->
+
+    <!-- Actions Bar -->
+    <div class="actions-bar">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm thời khóa biểu..." autocomplete="off">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" id="filterBtn">
+                <i class="fas fa-filter"></i> Lọc
+            </button>
+            <button class="btn btn-primary" onclick="createNewSchedule()">
+                <i class="fas fa-plus"></i> Tạo mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Schedules Grid -->
+    <div class="schedules-grid" id="schedulesGrid">
+        {% for schedule in schedules %}
+        <div class="schedule-card" data-schedule-id="{{ schedule.scheduleID }}">
+            <div class="schedule-header">
+                <div>
+                    <div class="schedule-title clickable" 
+                         onclick="editSchedule('{{ schedule.scheduleID }}')" 
+                         title="Click để chỉnh sửa thời khóa biểu">
+                        {{ schedule.scheduleName|default:schedule.title }}
+                    </div>
+                    <div class="schedule-meta">
+                        <span class="status-badge status-{{ schedule.status|default:'active' }}">
+                            {{ schedule.status|default:'Đang sử dụng' }}
+                        </span>
+                        <span class="ms-2">
+                            <i class="fas fa-clock"></i> 
+                            {{ schedule.created_at|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                </div>
+                <div class="schedule-actions">
+                    <button class="btn-action btn-edit" onclick="editSchedule('{{ schedule.scheduleID }}')" title="Chỉnh sửa">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action btn-export" onclick="exportSchedule('{{ schedule.scheduleID }}')" title="Xuất">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="deleteSchedule('{{ schedule.scheduleID }}')" title="Xóa">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Schedule Preview -->
+            <div class="schedule-preview">
+                <div class="preview-grid">
+                    <div class="preview-day">T2</div>
+                    <div class="preview-day">T3</div>
+                    <div class="preview-day has-class">T4</div>
+                    <div class="preview-day">T5</div>
+                    <div class="preview-day has-class">T6</div>
+                    <div class="preview-day">T7</div>
+                    <div class="preview-day">CN</div>
+                </div>
+            </div>
+
+            <!-- Schedule Stats -->
+            <div class="schedule-stats">
+                <span>
+                    <i class="fas fa-book"></i> 
+                    {{ schedule.subjects_count|default:0 }} môn học
+                </span>
+                <span>
+                    <i class="fas fa-users"></i> 
+                    Học kỳ {{ schedule.semester|default:"1" }}
+                </span>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="icon">
+                <i class="fas fa-calendar-plus"></i>
+            </div>
+            <h3>Chưa có thời khóa biểu nào</h3>
+            <p>Tạo thời khóa biểu đầu tiên của bạn để bắt đầu</p>
+            <button class="btn btn-primary mt-3" onclick="createNewSchedule()">
+                <i class="fas fa-plus"></i> Tạo thời khóa biểu mới
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa thời khóa biểu này?</p>
+                <p class="text-muted">Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash"></i> Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let scheduleToDelete = null;
+
+function createNewSchedule() {
+    // Redirect to create new schedule
+    window.location.href = "{% url 'create_schedule' %}";
+}
+
+function editSchedule(scheduleId) {
+    // Redirect to edit schedule
+    window.location.href = `/schedule/edit/${scheduleId}/`;
+}
+
+function exportSchedule(scheduleId) {
+    // Open export page in new tab
+    window.open(`/schedule/export/${scheduleId}/`, '_blank');
+}
+
+function deleteSchedule(scheduleId) {
+    scheduleToDelete = scheduleId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const scheduleCards = document.querySelectorAll('.schedule-card');
+    
+    scheduleCards.forEach(card => {
+        const title = card.querySelector('.schedule-title').textContent.toLowerCase();
+        const visible = title.includes(searchTerm);
+        card.style.display = visible ? 'block' : 'none';
+    });
+    
+    // Show empty state if no results
+    const visibleCards = document.querySelectorAll('.schedule-card[style="display: block"], .schedule-card:not([style*="display: none"])');
+    const emptyState = document.querySelector('.empty-state');
+    
+    if (visibleCards.length === 0 && searchTerm !== '') {
+        if (!document.querySelector('.no-results')) {
+            const noResults = document.createElement('div');
+            noResults.className = 'empty-state no-results';
+            noResults.innerHTML = `
+                <div class="icon"><i class="fas fa-search"></i></div>
+                <h3>Không tìm thấy kết quả</h3>
+                <p>Không có thời khóa biểu nào phù hợp với từ khóa "${searchTerm}"</p>
+            `;
+            document.getElementById('schedulesGrid').appendChild(noResults);
+        }
+    } else {
+        const noResults = document.querySelector('.no-results');
+        if (noResults) {
+            noResults.remove();
+        }
+    }
+});
+
+// Confirm delete
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (scheduleToDelete) {
+        // Create form and submit for deletion
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/schedule/delete/${scheduleToDelete}/`;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+});
+
+// Animation on load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.schedule-card, .stat-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

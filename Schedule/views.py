@@ -1,9 +1,38 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Schedule, Subject
 from django.http import HttpRequest
+from django.db.models import Count
 import uuid
+
+# Schedule List View
+def schedule_list(request):
+    """Display list of all schedules"""
+    schedules = Schedule.objects.all().order_by('-updated_at')
+    
+    # Calculate statistics
+    total_schedules = schedules.count()
+    active_schedules = total_schedules  # Since we don't have status field, assume all active
+    
+    # Get total subjects across all schedules
+    total_subjects = Subject.objects.count()
+    
+    # Add subjects count for each schedule
+    for schedule in schedules:
+        schedule.subjects_count = Subject.objects.filter(schedule=schedule).count()
+        schedule.created_at = schedule.updated_at  # Use updated_at as created_at
+        schedule.status = 'active'  # Default status since we don't have this field
+        schedule.semester = "1"  # Default semester
+    
+    context = {
+        'schedules': schedules,
+        'total_schedules': total_schedules,
+        'active_schedules': active_schedules,
+        'total_subjects': total_subjects,
+    }
+    return render(request, 'schedule/scheduleList.html', context)
+
 # Create your views here.
 def schedule(request, id):
     context = {
@@ -105,3 +134,18 @@ def schedule_export(request, id):
         'schedules': Subject.objects.filter(schedule__scheduleID=id)
     }
     return render(request, 'schedule/schedule_export.html', context)
+
+@csrf_exempt
+def delete_schedule_list(request, id):
+    """Delete a schedule from the list"""
+    if request.method == 'POST':
+        try:
+            schedule = get_object_or_404(Schedule, scheduleID=id)
+            # Delete all subjects associated with this schedule
+            Subject.objects.filter(schedule=schedule).delete()
+            # Delete the schedule
+            schedule.delete()
+            return redirect('schedule_list')
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

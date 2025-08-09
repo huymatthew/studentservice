@@ -12,9 +12,13 @@
     <!-- Top Menubar -->
     <div class="editor-menubar">
         <div class="menubar-left">
+            <a href="{% url 'schedule_list' %}" class="btn btn-outline-primary me-3 back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span class="back-text">Quay lại</span>
+            </a>
             <h1 class="editor-title">
                 <i class="fas fa-calendar-alt"></i>
-                Schedule Editor
+                <span class="title-text">Schedule Editor</span>
             </h1>
         </div>
         <div class="menubar-center">
@@ -29,24 +33,64 @@
             </div>
         </div>
         <div class="menubar-right">
-            <a href="{% url 'schedule_export' id %}" target="_blank" class="btn btn-info">
-                <i class="fas fa-external-link-alt"></i> Xuất
-            </a>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
-                <i class="fas fa-plus"></i> Thêm môn học
+            <!-- Mobile menu toggle -->
+            <button class="btn btn-outline-secondary d-lg-none mobile-menu-toggle" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#mobileMenuCollapse">
+                <i class="fas fa-bars"></i>
             </button>
-            <button type="button" class="btn btn-outline-secondary" id="save-schedule">
-                <i class="fas fa-save"></i> Lưu
-            </button>
+            
+            <!-- Desktop buttons -->
+            <div class="desktop-actions d-none d-lg-flex">
+                <a href="{% url 'schedule_export' id %}" target="_blank" class="btn btn-info me-2">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span class="btn-text">Xuất</span>
+                </a>
+                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                    <i class="fas fa-plus"></i>
+                    <span class="btn-text">Thêm môn học</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="save-schedule">
+                    <i class="fas fa-save"></i>
+                    <span class="btn-text">Lưu</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Collapse -->
+    <div class="collapse d-lg-none" id="mobileMenuCollapse">
+        <div class="mobile-menu-content">
+            <div class="mobile-actions">
+                <a href="{% url 'schedule_export' id %}" target="_blank" class="btn btn-info btn-sm mb-2 w-100">
+                    <i class="fas fa-external-link-alt"></i> Xuất PNG
+                </a>
+                <button type="button" class="btn btn-primary btn-sm mb-2 w-100" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                    <i class="fas fa-plus"></i> Thêm môn học
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="save-schedule-mobile">
+                    <i class="fas fa-save"></i> Lưu thời khóa biểu
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Main Editor Area -->
     <div class="editor-content">
+        <!-- Mobile Sidebar Toggle -->
+        <button class="sidebar-toggle d-lg-none" id="sidebarToggle">
+            <i class="fas fa-list"></i>
+        </button>
+        
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+        
         <!-- Left Sidebar -->
-        <div class="editor-sidebar">
+        <div class="editor-sidebar" id="editorSidebar">
             <div class="sidebar-header">
                 <h5><i class="fas fa-list"></i> Môn học</h5>
+                <button class="sidebar-close d-lg-none" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="sidebar-content">
                 <div class="schedule-list" id="schedule-list">
@@ -252,6 +296,101 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="{% static 'js/schedule.js' %}"></script>
+
+<script>
+// Mobile menu functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile save button handler
+    const mobileSaveBtn = document.getElementById('save-schedule-mobile');
+    const desktopSaveBtn = document.getElementById('save-schedule');
+    
+    if (mobileSaveBtn && desktopSaveBtn) {
+        mobileSaveBtn.addEventListener('click', function() {
+            // Copy the click event from desktop save button
+            desktopSaveBtn.click();
+            
+            // Close mobile menu after action
+            const mobileCollapse = document.getElementById('mobileMenuCollapse');
+            if (mobileCollapse) {
+                const bsCollapse = new bootstrap.Collapse(mobileCollapse, {
+                    toggle: false
+                });
+                bsCollapse.hide();
+            }
+        });
+    }
+    
+    // Auto-close mobile menu on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) {
+            const mobileCollapse = document.getElementById('mobileMenuCollapse');
+            if (mobileCollapse && mobileCollapse.classList.contains('show')) {
+                const bsCollapse = new bootstrap.Collapse(mobileCollapse, {
+                    toggle: false
+                });
+                bsCollapse.hide();
+            }
+        }
+    });
+    
+    // Close mobile menu when clicking on modal triggers
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function(element) {
+        element.addEventListener('click', function() {
+            const mobileCollapse = document.getElementById('mobileMenuCollapse');
+            if (mobileCollapse && mobileCollapse.classList.contains('show')) {
+                const bsCollapse = new bootstrap.Collapse(mobileCollapse, {
+                    toggle: false
+                });
+                bsCollapse.hide();
+            }
+        });
+    });
+    
+    // Sidebar toggle functionality
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+    const sidebar = document.getElementById('editorSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    function showSidebar() {
+        sidebar.classList.add('show');
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function hideSidebar() {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', showSidebar);
+    }
+    
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', hideSidebar);
+    }
+    
+    if (overlay) {
+        overlay.addEventListener('click', hideSidebar);
+    }
+    
+    // Close sidebar on window resize to desktop
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) {
+            hideSidebar();
+        }
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+            hideSidebar();
+        }
+    });
+});
+</script>
 
 <style>
 /* Zoom feedback animation */
