@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đăng ký - DUT Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="card card-modern">
+                <div class="card-header-modern">
+                    <div class="auth-header">
+                        <h2><i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản</h2>
+                        <p class="mb-0">Tạo tài khoản mới để sử dụng hệ thống</p>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="fade-in">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-2"></i>{{ form.first_name.label }}
+                                </label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-2"></i>{{ form.last_name.label }}
+                                </label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">
+                                <i class="fas fa-at me-2"></i>{{ form.username.label }}
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger small">{{ form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>{{ form.email.label }}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.password1.id_for_label }}" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>{{ form.password1.label }}
+                                </label>
+                                {{ form.password1 }}
+                                {% if form.password1.errors %}
+                                    <div class="text-danger small">{{ form.password1.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.password2.id_for_label }}" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>{{ form.password2.label }}
+                                </label>
+                                {{ form.password2 }}
+                                {% if form.password2.errors %}
+                                    <div class="text-danger small">{{ form.password2.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản
+                            </button>
+                        </div>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Đã có tài khoản? 
+                                <a href="{% url 'login' %}" class="text-decoration-none">
+                                    <strong>Đăng nhập ngay</strong>
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%234171c9' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='m0 40l40-40h-40v40zm40 0v-40h-40l40 40z'/%3E%3C/g%3E%3C/svg%3E") repeat;
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        max-width: 700px;
+    }
+</style>
+{% endblock %}

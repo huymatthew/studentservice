@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - DUT Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="dashboard-card fade-in">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">
+                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                    Chào mừng, {{ user.first_name|default:user.username }}!
+                </h1>
+                <p class="text-muted mb-0">
+                    Hệ thống quản lý thông tin sinh viên - Đại học Bách khoa Đà Nẵng
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="text-muted">
+                    <small>Hôm nay: {{ "now"|date:"d/m/Y" }}</small><br>
+                    <small>Lần cuối đăng nhập: {{ user.last_login|date:"d/m/Y H:i" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="dashboard-stats">
+        <div class="stat-card slide-in-right">
+            <div class="stat-number">{{ profile.gpa|default:"N/A" }}</div>
+            <div class="stat-label">
+                <i class="fas fa-chart-line me-2"></i>Điểm trung bình
+            </div>
+        </div>
+        <div class="stat-card slide-in-right">
+            <div class="stat-number">{{ profile.credits_earned|default:0 }}</div>
+            <div class="stat-label">
+                <i class="fas fa-graduation-cap me-2"></i>Tín chỉ tích lũy
+            </div>
+        </div>
+        <div class="stat-card slide-in-right">
+            <div class="stat-number">{{ profile.class_name|default:"N/A" }}</div>
+            <div class="stat-label">
+                <i class="fas fa-users me-2"></i>Lớp học
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Student Information -->
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-user me-2 text-primary"></i>Thông tin sinh viên
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Họ và tên:</strong>
+                            <span class="text-muted">{{ user.get_full_name|default:user.username }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Mã số sinh viên:</strong>
+                            <span class="badge bg-primary">{{ profile.student_id|default:"Chưa cập nhật" }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Email:</strong>
+                            <span class="text-muted">{{ user.email|default:"Chưa cập nhật" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Lớp:</strong>
+                            <span class="text-muted">{{ profile.class_name|default:"Chưa cập nhật" }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Ngành học:</strong>
+                            <span class="text-muted">{{ profile.major|default:"Chưa cập nhật" }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Trạng thái:</strong>
+                            {% if profile.status == 'active' %}
+                                <span class="badge bg-success">Đang học</span>
+                            {% elif profile.status == 'graduated' %}
+                                <span class="badge bg-info">Đã tốt nghiệp</span>
+                            {% elif profile.status == 'suspended' %}
+                                <span class="badge bg-warning">Tạm nghỉ</span>
+                            {% else %}
+                                <span class="badge bg-danger">Thôi học</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <a href="{% url 'profile' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Cập nhật thông tin
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-bolt me-2 text-primary"></i>Thao tác nhanh
+                </h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'profile' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-edit me-2"></i>Cập nhật hồ sơ
+                    </a>
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-calendar me-2"></i>Xem lịch học
+                    </button>
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-chart-bar me-2"></i>Xem điểm số
+                    </button>
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-graduation-cap me-2"></i>Kế hoạch học tập
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="dashboard-card">
+        <h5 class="mb-3">
+            <i class="fas fa-clock me-2 text-primary"></i>Hoạt động gần đây
+        </h5>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Chức năng này đang được phát triển. Bạn sẽ có thể xem các hoạt động gần đây tại đây.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-stats .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .dashboard-stats .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .dashboard-stats .stat-card:nth-child(3) { animation-delay: 0.3s; }
+</style>
+{% endblock %}

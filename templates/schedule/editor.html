@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Schedule Editor - DUT Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/schedule.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="schedule-editor">
+    <!-- Top Menubar -->
+    <div class="editor-menubar">
+        <div class="menubar-left">
+            <h1 class="editor-title">
+                <i class="fas fa-calendar-alt"></i>
+                Schedule Editor
+            </h1>
+        </div>
+        <div class="menubar-center">
+            <div class="zoom-controls">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-out">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <span class="zoom-level">100%</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-in">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="menubar-right">
+            <a href="{% url 'schedule_export' id %}" target="_blank" class="btn btn-info">
+                <i class="fas fa-external-link-alt"></i> Xuất
+            </a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                <i class="fas fa-plus"></i> Thêm môn học
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="save-schedule">
+                <i class="fas fa-save"></i> Lưu
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Editor Area -->
+    <div class="editor-content">
+        <!-- Left Sidebar -->
+        <div class="editor-sidebar">
+            <div class="sidebar-header">
+                <h5><i class="fas fa-list"></i> Môn học</h5>
+            </div>
+            <div class="sidebar-content">
+                <div class="schedule-list" id="schedule-list">
+                    {% for subject in schedules %}
+                    <div class="schedule-item" data-schedule-id="{{ subject.id }}" draggable="true">
+                        <div class="schedule-color" style="background-color: {{ subject.color|default:'#4171c9' }}"></div>
+                        <div class="schedule-info">
+                            <div class="schedule-name">{{ subject.subject_name|default:'N/A' }}</div>
+                            <div class="schedule-details">{{ subject.subject_code|default:'Môn học' }}</div>
+                            <div class="schedule-meta">
+                                <small>
+                                    <i class="fas fa-map-marker-alt"></i> {{ subject.room|default:'Phòng' }} |
+                                    <i class="fas fa-user"></i> {{ subject.teacher|default:'Giảng viên' }}
+                                </small>
+                            </div>
+                            <div class="schedule-meta">
+                                <small>
+                                    <i class="fas fa-clock"></i> Tiết {{ subject.start_period|default:'1' }} - {{ subject.end_period|default:'2' }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="schedule-actions">
+                            <button class="btn-edit" onclick="editSchedule({{ id }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-delete" onclick="deleteSchedule('{{ id }}', '{{ subject.subject_id }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-plus"></i>
+                        <p>Chưa có môn học nào</p>
+                        <small>Thêm môn học đầu tiên của bạn</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Canvas Area -->
+        <div class="editor-canvas-container">
+            <div class="canvas-header">
+                <h6><i class="fas fa-table"></i> Thời khóa biểu</h6>
+            </div>
+            <div class="canvas-content" id="schedule-canvas">
+                <table class="schedule-table table table-bordered">
+                    <thead>
+                        <tr>
+                            <th class="period-header"></th>
+                            {% for weekday in weekdays %}
+                            <th class="weekday-header">{{ weekday.1 }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for period in periods %}
+                        <tr data-period="{{ period.0 }}">
+                            <td class="period-label">
+                                <div class="period-number">Tiết {{ period.0 }}</div>
+                                <div class="period-time">{{ period.1 }}</div>
+                            </td>
+                            {% for weekday in weekdays %}
+                            <td class="time-slot droppable" 
+                                data-weekday="{{ weekday.0 }}" 
+                                data-period="{{ period.0 }}"
+                            >
+                                {% for subject in schedules %}
+                                    {% if subject.weekday == weekday.0 and subject.start_period == period.0 %}
+                                    <div class="schedule-block" 
+                                         style="background-color: {{ subject.color|default:'#4171c9' }};"
+                                         data-schedule-id="{{ subject.id|default:forloop.counter }}"
+                                         data-start-period="{{ subject.start_period }}"
+                                         data-end-period="{{ subject.end_period }}"
+                                         draggable="true">
+                                        <div class="subject-code">{{ subject.subject_name }}</div>
+                                        <div class="subject-name">{{ subject.subject_code }}</div>
+                                        <div class="room-info">{{ subject.room }}</div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i> Thêm môn học mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_schedule' %}" id="add-schedule-form">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" name="schedule_id" value="{{ id }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="subject_code" class="form-label">Mã môn học</label>
+                                <input type="text" class="form-control" id="subject_code" name="subject_code" 
+                                       placeholder="VD: IT3190" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="subject_name" class="form-label">Tên môn học</label>
+                                <input type="text" class="form-control" id="subject_name" name="subject_name" 
+                                       placeholder="VD: Lập trình Web" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="room" class="form-label">Phòng học</label>
+                                <input type="text" class="form-control" id="room" name="room" 
+                                       placeholder="VD: 302-TC" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="teacher" class="form-label">Giảng viên</label>
+                                <input type="text" class="form-control" id="teacher" name="teacher" 
+                                       placeholder="Tên giảng viên">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="weekday" class="form-label">Thứ</label>
+                                <select class="form-select" id="weekday" name="weekday" required>
+                                    {% for day in weekdays %}
+                                    <option value="{{ day.0 }}">{{ day.1 }}</option>
+                                    {% endfor %}
+                                    <option value="6">Thứ 7</option>
+                                    <option value="0">Chủ Nhật</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="start_period" class="form-label">Tiết bắt đầu</label>
+                                <select class="form-select" id="start_period" name="start_period" required>
+                                    {% for period in periods %}
+                                    <option value="{{ period.0 }}">Tiết {{ period.0 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="end_period" class="form-label">Tiết kết thúc</label>
+                                <select class="form-select" id="end_period" name="end_period" required>
+                                    {% for period in periods %}
+                                    <option value="{{ period.0 }}">Tiết {{ period.0 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="color" class="form-label">Màu hiển thị</label>
+                                <input type="color" class="form-control form-control-color" id="color" name="color" 
+                                       value="#4171c9" title="Chọn màu cho môn học">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="note" name="note" rows="2" 
+                                          placeholder="Ghi chú thêm..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm môn học
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{% static 'js/schedule.js' %}"></script>
+<script>
+    function adjustHeight(scheduleBlocks){
+
+        const ruler = document.querySelector("#schedule-canvas > table > tbody > tr");
+        console.log("Ruler height:", ruler ? ruler.offsetHeight : "Not found");
+        scheduleBlocks.forEach(block => {
+            const start = Number(block.dataset.startPeriod);
+            const end = Number(block.dataset.endPeriod);
+            const rulerHeight = ruler ? ruler.offsetHeight : 40;
+            block.style.height = ((end - start + 1) * rulerHeight) + 'px';
+            console.log(`Block ${block.dataset.scheduleId} height set to ${block.style.height}`);
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const scheduleBlocks = document.querySelectorAll('.schedule-block');
+        adjustHeight(scheduleBlocks);
+        window.addEventListener('resize', function() {
+            adjustHeight(scheduleBlocks);
+        });
+    });
+    
+</script>
+{% endblock %}
+

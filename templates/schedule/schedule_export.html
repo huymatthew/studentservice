@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <title>Thời Khóa Biểu - Export</title>
+    <link rel="stylesheet" href="{% static 'css/non-responsive.css' %}">
+</head>
+<body>
+    <div class="export-container">
+        <h1 class="schedule-title">Thời Khóa Biểu</h1>
+        
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th class="period-header">Tiết học</th>
+                    {% for weekday in weekdays %}
+                    <th class="weekday-header">{{ weekday.1 }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for period in periods %}
+                <tr data-period="{{ period.0 }}">
+                    <td class="period-label">
+                        <div class="period-number">Tiết {{ period.0 }}</div>
+                        <div class="period-time">{{ period.1 }}</div>
+                    </td>
+                    {% for weekday in weekdays %}
+                    <td class="time-slot" 
+                        data-weekday="{{ weekday.0 }}" 
+                        data-period="{{ period.0 }}">
+                        {% for subject in schedules %}
+                            {% if subject.weekday == weekday.0 and subject.start_period == period.0 %}
+                            <div class="schedule-block" 
+                                style="background-color: {{ subject.color|default:'#4171c9' }}; {% if subject.height %}height: {{ subject.height }}px;{% endif %}"
+                                data-schedule-id="{{ subject.id|default:forloop.counter }}"
+                                data-start-period="{{ subject.start_period }}"
+                                data-end-period="{{ subject.end_period }}">
+                                <div class="subject-code">{{ subject.subject_name }}</div>
+                                <div class="subject-name">{{ subject.subject_code }}</div>
+                                <div class="room-info">{{ subject.room }}</div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Export function for this standalone page
+        function exportToPNG() {
+            const exportBtn = document.querySelector('.export-btn');
+            const originalText = exportBtn.innerHTML;
+            
+            // Show loading state
+            exportBtn.innerHTML = '⏳ Đang xuất...';
+            exportBtn.disabled = true;
+            
+            const container = document.querySelector('.export-container');
+            
+            html2canvas(container, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                useCORS: true,
+                allowTaint: false,
+                logging: false,
+                width: 1160,
+                height: container.offsetHeight,
+                onclone: function(clonedDoc) {
+                    // Hide export button in cloned document
+                    const clonedBtn = clonedDoc.querySelector('.export-btn');
+                    if (clonedBtn) {
+                        clonedBtn.style.display = 'none';
+                    }
+                }
+            }).then(function(canvas) {
+                const link = document.createElement('a');
+                link.download = 'thoi-khoa-bieu-' + new Date().toISOString().slice(0, 10) + '.png';
+                link.href = canvas.toDataURL('image/png');
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show success message
+                exportBtn.innerHTML = '✅ Đã xuất!';
+                setTimeout(() => {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                }, 2000);
+                
+            }).catch(function(error) {
+                console.error('Export error:', error);
+                alert('Có lỗi xảy ra khi xuất PNG: ' + error.message);
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            });
+        }
+
+        // Add export button
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'export-btn';
+            exportBtn.innerHTML = '📥 Xuất PNG';
+            exportBtn.onclick = exportToPNG;
+            document.body.appendChild(exportBtn);
+        });
+        function adjustHeight(scheduleBlocks){
+            const ruler = document.querySelector("body > div.export-container > table > tbody > tr");
+            console.log("Ruler height:", ruler ? ruler.offsetHeight : "Not found");
+            scheduleBlocks.forEach(block => {
+                const start = Number(block.dataset.startPeriod);
+                const end = Number(block.dataset.endPeriod);
+                const rulerHeight = ruler ? ruler.offsetHeight : 40;
+                block.style.height = ((end - start + 1) * rulerHeight) + 'px';
+                console.log(`Block ${block.dataset.scheduleId} height set to ${block.style.height}`);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const scheduleBlocks = document.querySelectorAll('.schedule-block');
+            adjustHeight(scheduleBlocks);
+            window.addEventListener('resize', function() {
+                adjustHeight(scheduleBlocks);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đăng nhập - DUT Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="card card-modern">
+                <div class="card-header-modern">
+                    <div class="auth-header">
+                        <h2><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</h2>
+                        <p class="mb-0">Vui lòng đăng nhập để tiếp tục</p>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="fade-in">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-2"></i>Tên đăng nhập
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Nhập tên đăng nhập" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Mật khẩu
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Nhập mật khẩu" required>
+                        </div>
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                            </button>
+                        </div>
+                        <div class="text-center">
+                            <p class="mb-0">Chưa có tài khoản? 
+                                <a href="{% url 'register' %}" class="text-decoration-none">
+                                    <strong>Đăng ký ngay</strong>
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%234171c9' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='m0 40l40-40h-40v40zm40 0v-40h-40l40 40z'/%3E%3C/g%3E%3C/svg%3E") repeat;
+    }
+</style>
+{% endblock %}
