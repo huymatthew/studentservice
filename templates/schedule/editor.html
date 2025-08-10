@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Schedule Editor - DUT Manager{% endblock %}
+{% block title %}{{ schedule.scheduleName|default:'Schedule Editor' }} - DUT Manager{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/schedule.css' %}">
@@ -49,10 +49,10 @@
                     <i class="fas fa-plus"></i>
                     <span class="btn-text">Thêm môn học</span>
                 </button>
-                <button type="button" class="btn btn-outline-secondary" id="save-schedule">
+                <!--<button type="button" class="btn btn-outline-secondary" id="save-schedule">
                     <i class="fas fa-save"></i>
                     <span class="btn-text">Lưu</span>
-                </button>
+                </button>-->
             </div>
         </div>
     </div>
@@ -67,9 +67,10 @@
                 <button type="button" class="btn btn-primary btn-sm mb-2 w-100" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
                     <i class="fas fa-plus"></i> Thêm môn học
                 </button>
+                <!-- Mobile save button 
                 <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="save-schedule-mobile">
                     <i class="fas fa-save"></i> Lưu thời khóa biểu
-                </button>
+                </button>-->
             </div>
         </div>
     </div>
@@ -135,7 +136,24 @@
         <!-- Right Canvas Area -->
         <div class="editor-canvas-container">
             <div class="canvas-header">
-                <h6><i class="fas fa-table"></i> Thời khóa biểu</h6>
+                <div class="schedule-title-container">
+                    <i class="fas fa-table text-muted"></i>
+                    <input type="text" 
+                           class="schedule-title-input form-control" 
+                           id="scheduleTitle"
+                           value="{{ schedule.title|default:'Thời khóa biểu mới' }}"
+                           placeholder="Nhập tên thời khóa biểu..."
+                           maxlength="100"
+                           minlength="1"
+                           required
+                           autocomplete="off"
+                           spellcheck="false">
+                    <button class="btn btn-sm btn-outline-success save-title-btn" 
+                            id="saveTitleBtn" 
+                            title="Lưu tên thời khóa biểu">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
             </div>
             <div class="canvas-content" id="schedule-canvas">
                 <table class="schedule-table table table-bordered">
@@ -376,18 +394,123 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.addEventListener('click', hideSidebar);
     }
     
-    // Close sidebar on window resize to desktop
     window.addEventListener('resize', function() {
         if (window.innerWidth >= 992) {
             hideSidebar();
         }
     });
     
-    // Close sidebar on escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && sidebar.classList.contains('show')) {
             hideSidebar();
         }
+    });
+    
+    const titleInput = document.getElementById('scheduleTitle');
+    const saveTitleBtn = document.getElementById('saveTitleBtn');
+    let originalTitle = titleInput.value;
+    
+    function showSaveButton() {
+        if (titleInput.value !== originalTitle && titleInput.value.trim() !== '') {
+            saveTitleBtn.classList.add('show');
+        } else {
+            saveTitleBtn.classList.remove('show');
+        }
+    }
+    
+    function saveScheduleTitle() {
+        const newTitle = titleInput.value.trim();
+        if (newTitle === '' || newTitle === originalTitle) {
+            titleInput.value = originalTitle;
+            saveTitleBtn.classList.remove('show');
+            return;
+        }
+        
+        saveTitleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        saveTitleBtn.disabled = true;
+        
+        fetch('{% url "update_schedule_title" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                schedule_id: '{{ id }}',
+                title: newTitle
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                originalTitle = newTitle;
+                saveTitleBtn.classList.remove('show');
+                
+                // Show success feedback
+                saveTitleBtn.innerHTML = '<i class="fas fa-check"></i>';
+                saveTitleBtn.style.backgroundColor = '#28a745';
+                saveTitleBtn.style.color = 'white';
+                
+                setTimeout(() => {
+                    saveTitleBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    saveTitleBtn.style.backgroundColor = '';
+                    saveTitleBtn.style.color = '';
+                    saveTitleBtn.disabled = false;
+                }, 1500);
+                
+                // Update page title
+                document.title = `${newTitle} - Schedule Editor - DUT Manager`;
+            } else {
+                throw new Error(data.message || 'Có lỗi xảy ra');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            titleInput.value = originalTitle;
+            saveTitleBtn.innerHTML = '<i class="fas fa-times"></i>';
+            saveTitleBtn.style.backgroundColor = '#dc3545';
+            saveTitleBtn.style.color = 'white';
+            
+            setTimeout(() => {
+                saveTitleBtn.innerHTML = '<i class="fas fa-check"></i>';
+                saveTitleBtn.style.backgroundColor = '';
+                saveTitleBtn.style.color = '';
+                saveTitleBtn.disabled = false;
+                saveTitleBtn.classList.remove('show');
+            }, 2000);
+            
+            alert('Không thể lưu tên thời khóa biểu. Vui lòng thử lại.');
+        });
+    }
+    
+    titleInput.addEventListener('input', showSaveButton);
+    titleInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveScheduleTitle();
+            titleInput.blur();
+        } else if (e.key === 'Escape') {
+            titleInput.value = originalTitle;
+            saveTitleBtn.classList.remove('show');
+            titleInput.blur();
+        }
+    });
+    
+    titleInput.addEventListener('blur', function() {
+        // Small delay to allow clicking save button
+        setTimeout(() => {
+            if (!saveTitleBtn.matches(':hover')) {
+                if (titleInput.value.trim() === '') {
+                    titleInput.value = originalTitle;
+                }
+                saveTitleBtn.classList.remove('show');
+            }
+        }, 150);
+    });
+    
+    saveTitleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        saveScheduleTitle();
     });
 });
 </script>

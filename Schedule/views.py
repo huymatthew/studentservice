@@ -5,6 +5,7 @@ from .models import Schedule, Subject
 from django.http import HttpRequest
 from django.db.models import Count
 import uuid
+import json
 
 # Schedule List View
 def schedule_list(request):
@@ -24,8 +25,15 @@ def schedule_list(request):
 
 # Create your views here.
 def schedule(request, id):
+    # Get or create schedule
+    schedule, created = Schedule.objects.get_or_create(
+        scheduleID=id,
+        defaults={'scheduleName': 'Thời khóa biểu mới'}
+    )
+    
     context = {
         'id': id,
+        'schedule': schedule,
         'weekdays': [
             (1, 'Thứ 2'),
             (2, 'Thứ 3'),
@@ -138,3 +146,41 @@ def delete_schedule_list(request, id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+@csrf_exempt
+def update_schedule_title(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            schedule_id = data.get('schedule_id')
+            new_title = data.get('title', '').strip()
+            
+            if not schedule_id or not new_title:
+                return JsonResponse({'success': False, 'message': 'Thiếu thông tin bắt buộc'})
+            
+            if len(new_title) > 100:
+                return JsonResponse({'success': False, 'message': 'Tên thời khóa biểu không được quá 100 ký tự'})
+            
+            # Get or create schedule
+            schedule = Schedule.objects.filter(scheduleID=schedule_id).first()
+
+            if schedule:
+                print("Updating schedule title...")
+                schedule.title = new_title
+                schedule.save()
+            else:
+                return JsonResponse({'success': False, 'message': 'Không tìm thấy thời khóa biểu với ID đã cho'})
+            
+            print(Schedule.objects.filter(scheduleID=schedule_id).first().title)
+            return JsonResponse({
+                'success': True, 
+                'message': 'Đã cập nhật tên thời khóa biểu thành công',
+                'title': new_title
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Dữ liệu không hợp lệ'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Có lỗi xảy ra: {str(e)}'})
+    
+    return JsonResponse({'success': False, 'message': 'Phương thức không được hỗ trợ'})

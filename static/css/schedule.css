@@ -332,6 +332,87 @@
     background: #f8f9fa;
 }
 
+.schedule-title-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.schedule-title-container i {
+    color: var(--dut-primary);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.schedule-title-input {
+    border: 2px solid transparent;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dut-dark);
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 0;
+}
+
+.schedule-title-input:focus {
+    border-color: var(--dut-primary);
+    background: white;
+    box-shadow: 0 0 0 0.2rem rgba(65, 113, 201, 0.1);
+    outline: none;
+}
+
+.schedule-title-input:hover:not(:focus) {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(65, 113, 201, 0.3);
+}
+
+.schedule-title-input::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+.schedule-title-input:invalid {
+    border-color: #dc3545;
+}
+
+.schedule-title-input:invalid:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
+}
+
+.save-title-btn {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+    border-color: #28a745;
+    color: #28a745;
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.save-title-btn.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.save-title-btn:hover {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.schedule-title-container:hover .save-title-btn,
+.schedule-title-input:focus + .save-title-btn {
+    opacity: 0.7;
+    transform: scale(1);
+}
+
 .canvas-header h6 {
     margin: 0;
     color: var(--dut-dark);
@@ -797,6 +878,21 @@
         padding: 12px 15px;
     }
     
+    .schedule-title-container {
+        gap: 8px;
+    }
+    
+    .schedule-title-input {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+    
+    .save-title-btn {
+        min-width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+    
     .canvas-header h6 {
         font-size: 0.95rem;
     }
@@ -822,6 +918,21 @@
     
     .canvas-header {
         padding: 10px 12px;
+    }
+    
+    .schedule-title-container {
+        gap: 6px;
+    }
+    
+    .schedule-title-input {
+        font-size: 0.85rem;
+        padding: 5px 8px;
+    }
+    
+    .save-title-btn {
+        min-width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
     }
 }
 

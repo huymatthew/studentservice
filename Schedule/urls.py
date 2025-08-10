@@ -9,4 +9,5 @@ urlpatterns = [
     path('create/', views.create_schedule, name='create_schedule'),
     path('delete/<str:id>/', views.delete_schedule_list, name='delete_schedule_list'),
     path('delete/<str:id>/<str:subject_id>/', views.delete_schedule, name='delete_schedule'),
+    path('update-title/', views.update_schedule_title, name='update_schedule_title'),
 ]
