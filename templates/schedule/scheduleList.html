@@ -92,13 +92,13 @@
             <!-- Schedule Preview -->
             <div class="schedule-preview">
                 <div class="preview-grid">
-                    <div class="preview-day">T2</div>
-                    <div class="preview-day">T3</div>
-                    <div class="preview-day has-class">T4</div>
-                    <div class="preview-day">T5</div>
-                    <div class="preview-day has-class">T6</div>
-                    <div class="preview-day">T7</div>
-                    <div class="preview-day">CN</div>
+                    <div class="preview-day {% if schedule.sw.0 > 0 %}has-class{% endif %}">T2</div>
+                    <div class="preview-day {% if schedule.sw.1 > 0 %}has-class{% endif %}">T3</div>
+                    <div class="preview-day {% if schedule.sw.2 > 0 %}has-class{% endif %}">T4</div>
+                    <div class="preview-day {% if schedule.sw.3 > 0 %}has-class{% endif %}">T5</div>
+                    <div class="preview-day {% if schedule.sw.4 > 0 %}has-class{% endif %}">T6</div>
+                    <div class="preview-day {% if schedule.sw.5 > 0 %}has-class{% endif %}">T7</div>
+                    <div class="preview-day {% if schedule.sw.6 > 0 %}has-class{% endif %}">CN</div>
                 </div>
             </div>
 

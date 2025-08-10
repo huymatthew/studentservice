@@ -7,25 +7,26 @@ from django.db.models import Count
 import uuid
 import json
 
-# Schedule List View
 def schedule_list(request):
     """Display list of all schedules"""
-    schedules = Schedule.objects.all().order_by('-updated_at')
+    if (request.user is None): return redirect('login')
+    schedules = Schedule.objects.filter(user=request.user).order_by('-updated_at')
     
-    # Add subjects count for each schedule
     for schedule in schedules:
         schedule.subjects_count = Subject.objects.filter(schedule=schedule).count()
-        schedule.created_at = schedule.updated_at  # Use updated_at as created_at
+        schedule.created_at = schedule.updated_at 
         schedule.status = 'public' if schedule.public else 'private'
-    
+        
+        sw = Subject.objects.filter(schedule=schedule).values('weekday')
+        schedule.sw = [False] * 7
+        for item in sw:
+            schedule.sw[item['weekday'] - 1] = True
     context = {
         'schedules': schedules,
     }
     return render(request, 'schedule/scheduleList.html', context)
 
-# Create your views here.
 def schedule(request, id):
-    # Get or create schedule
     schedule, created = Schedule.objects.get_or_create(
         scheduleID=id,
         defaults={'scheduleName': 'Thời khóa biểu mới'}
@@ -138,9 +139,7 @@ def delete_schedule_list(request, id):
     if request.method == 'POST':
         try:
             schedule = get_object_or_404(Schedule, scheduleID=id)
-            # Delete all subjects associated with this schedule
             Subject.objects.filter(schedule=schedule).delete()
-            # Delete the schedule
             schedule.delete()
             return redirect('schedule_list')
         except Exception as e:
@@ -161,7 +160,6 @@ def update_schedule_title(request):
             if len(new_title) > 100:
                 return JsonResponse({'success': False, 'message': 'Tên thời khóa biểu không được quá 100 ký tự'})
             
-            # Get or create schedule
             schedule = Schedule.objects.filter(scheduleID=schedule_id).first()
 
             if schedule:
@@ -171,7 +169,6 @@ def update_schedule_title(request):
             else:
                 return JsonResponse({'success': False, 'message': 'Không tìm thấy thời khóa biểu với ID đã cho'})
             
-            print(Schedule.objects.filter(scheduleID=schedule_id).first().title)
             return JsonResponse({
                 'success': True, 
                 'message': 'Đã cập nhật tên thời khóa biểu thành công',
