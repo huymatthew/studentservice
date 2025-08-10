@@ -29,7 +29,7 @@ def schedule_list(request):
 def schedule(request, id):
     schedule, created = Schedule.objects.get_or_create(
         scheduleID=id,
-        defaults={'scheduleName': 'Thời khóa biểu mới'}
+        defaults={'title': 'Thời khóa biểu mới'}
     )
     
     context = {
@@ -83,6 +83,38 @@ def add_schedule(request):
         subject.save()
 
     return redirect('edit', id=request.POST.get('schedule_id'))
+
+@csrf_exempt
+def edit_subject(request):
+    """Edit an existing subject"""
+    if request.method == 'POST':
+        try:
+            subject_id = request.POST.get('subject_id')
+            schedule_id = request.POST.get('schedule_id')
+            
+            # Get the subject to edit
+            subject = get_object_or_404(Subject, subject_id=subject_id)
+            
+            # Update subject fields
+            subject.subject_name = request.POST.get('subject_name')
+            subject.subject_code = request.POST.get('subject_code')
+            subject.room = request.POST.get('room', '')
+            subject.teacher = request.POST.get('teacher', '')
+            subject.weekday = int(request.POST.get('weekday', 1))
+            subject.start_period = int(request.POST.get('start_period', 1))
+            subject.end_period = int(request.POST.get('end_period', 2))
+            subject.color = request.POST.get('color', '#4171c9')
+            # Note: Skip note field as it's not in the model
+            
+            subject.save()
+            
+            return redirect('edit', id=schedule_id)
+            
+        except Exception as e:
+            print(f"Error editing subject: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 @csrf_exempt
 def delete_schedule(request, id, subject_id):

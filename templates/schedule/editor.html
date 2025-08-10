@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ schedule.scheduleName|default:'Schedule Editor' }} - DUT Manager{% endblock %}
+{% block title %}{{ schedule.title|default:'Schedule Editor' }} - DUT Manager{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/schedule.css' %}">
@@ -114,7 +114,7 @@
                             </div>
                         </div>
                         <div class="schedule-actions">
-                            <button class="btn-edit" onclick="editSchedule({{ id }})">
+                            <button class="btn-edit" onclick="editSubject('{{ subject.subject_id }}', '{{ subject.subject_name }}', '{{ subject.subject_code }}', '{{ subject.room }}', '{{ subject.teacher }}', {{ subject.weekday }}, {{ subject.start_period }}, {{ subject.end_period }}, '{{ subject.color|default:"#4171c9" }}')">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-delete" onclick="deleteSchedule('{{ id }}', '{{ subject.subject_id }}')">
@@ -303,6 +303,115 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Thêm môn học
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Schedule Modal -->
+<div class="modal fade" id="editScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Chỉnh sửa môn học
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'edit_subject' %}" id="edit-schedule-form">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" name="schedule_id" value="{{ id }}">
+                    <input type="hidden" name="subject_id" id="edit_subject_id">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_subject_code" class="form-label">Mã môn học</label>
+                                <input type="text" class="form-control" id="edit_subject_code" name="subject_code" 
+                                       placeholder="VD: IT3190" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_subject_name" class="form-label">Tên môn học</label>
+                                <input type="text" class="form-control" id="edit_subject_name" name="subject_name" 
+                                       placeholder="VD: Lập trình Web" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_room" class="form-label">Phòng học</label>
+                                <input type="text" class="form-control" id="edit_room" name="room" 
+                                       placeholder="VD: 302-TC" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_teacher" class="form-label">Giảng viên</label>
+                                <input type="text" class="form-control" id="edit_teacher" name="teacher" 
+                                       placeholder="Tên giảng viên">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="edit_weekday" class="form-label">Thứ</label>
+                                <select class="form-select" id="edit_weekday" name="weekday" required>
+                                    {% for day in weekdays %}
+                                    <option value="{{ day.0 }}">{{ day.1 }}</option>
+                                    {% endfor %}
+                                    <option value="6">Thứ 7</option>
+                                    <option value="0">Chủ Nhật</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="edit_start_period" class="form-label">Tiết bắt đầu</label>
+                                <select class="form-select" id="edit_start_period" name="start_period" required>
+                                    {% for period in periods %}
+                                    <option value="{{ period.0 }}">Tiết {{ period.0 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="edit_end_period" class="form-label">Tiết kết thúc</label>
+                                <select class="form-select" id="edit_end_period" name="end_period" required>
+                                    {% for period in periods %}
+                                    <option value="{{ period.0 }}">Tiết {{ period.0 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_color" class="form-label">Màu hiển thị</label>
+                                <input type="color" class="form-control form-control-color" id="edit_color" name="color" 
+                                       value="#4171c9" title="Chọn màu cho môn học">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_note" class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="edit_note" name="note" rows="2" 
+                                          placeholder="Ghi chú thêm..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Cập nhật môn học
                     </button>
                 </div>
             </form>
@@ -512,6 +621,55 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         saveScheduleTitle();
     });
+    
+    // Edit subject functionality
+    window.editSubject = function(subjectId, subjectName, subjectCode, room, teacher, weekday, startPeriod, endPeriod, color) {
+        // Populate edit modal with current data
+        document.getElementById('edit_subject_id').value = subjectId;
+        document.getElementById('edit_subject_name').value = subjectName || '';
+        document.getElementById('edit_subject_code').value = subjectCode || '';
+        document.getElementById('edit_room').value = room || '';
+        document.getElementById('edit_teacher').value = teacher || '';
+        document.getElementById('edit_weekday').value = weekday || 1;
+        document.getElementById('edit_start_period').value = startPeriod || 1;
+        document.getElementById('edit_end_period').value = endPeriod || 2;
+        document.getElementById('edit_color').value = color || '#4171c9';
+        document.getElementById('edit_note').value = ''; // Clear note field since it's not in model
+        
+        // Show edit modal
+        const editModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
+        editModal.show();
+    };
+    
+    // Form validation for edit modal
+    const editForm = document.getElementById('edit-schedule-form');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            const startPeriod = parseInt(document.getElementById('edit_start_period').value);
+            const endPeriod = parseInt(document.getElementById('edit_end_period').value);
+            
+            if (endPeriod <= startPeriod) {
+                e.preventDefault();
+                alert('Tiết kết thúc phải lớn hơn tiết bắt đầu!');
+                return false;
+            }
+        });
+    }
+    
+    // Form validation for add modal
+    const addForm = document.getElementById('add-schedule-form');
+    if (addForm) {
+        addForm.addEventListener('submit', function(e) {
+            const startPeriod = parseInt(document.getElementById('start_period').value);
+            const endPeriod = parseInt(document.getElementById('end_period').value);
+            
+            if (endPeriod <= startPeriod) {
+                e.preventDefault();
+                alert('Tiết kết thúc phải lớn hơn tiết bắt đầu!');
+                return false;
+            }
+        });
+    };
 });
 </script>
 
